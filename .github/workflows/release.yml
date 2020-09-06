@@ -12,21 +12,7 @@ env:
   MACOS_TARGET: x86_64-apple-darwin
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
   build:
-    needs: create-release
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -35,7 +21,7 @@ jobs:
             target: $LINUX_TARGET
           - os: macos-latest
             target: $MACOS_TARGET
-    name: Release
+    name: Build artifact
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -48,7 +34,34 @@ jobs:
         with:
           name: $PROJECT-${{matrix.target}}
           path: $PROJECT-${{matrix.target}}.tar.gz
-      - name: Upload asset
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+        run: echo '::set-env name=UPLOAD_URL::${{ steps.create_release.outputs.upload_url }}'
+      - name: Upload linux
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./$PROJECT-${{ matrix.target }}.tar.gz
+          asset_name: $PROJECT-${{ matrix.target }}.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload macos
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
