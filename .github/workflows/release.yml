@@ -40,6 +40,8 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v2
+        with:
+          path: ./artifacts
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -52,8 +54,6 @@ jobs:
           prerelease: false
       - name: Upload linux
         uses: actions/upload-release-asset@v1
-        with:
-            path: ./artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
