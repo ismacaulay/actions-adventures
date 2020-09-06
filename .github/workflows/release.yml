@@ -8,8 +8,6 @@ name: Upload Release Asset
 
 env:
   PROJECT: actions-adventures
-  LINUX_TARGET: x86_64-unknown-linux-gnu
-  MACOS_TARGET: x86_64-apple-darwin
 
 jobs:
   build:
@@ -18,9 +16,9 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            target: ${{ env.LINUX_TARGET }}
+            target: x86_64-unknown-linux-gnu
           - os: macos-latest
-            target: ${{ env.MACOS_TARGET }}
+            target: x86_64-apple-darwin
     name: Build artifact
     runs-on: ${{ matrix.os }}
     steps:
